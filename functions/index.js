@@ -10,6 +10,7 @@ const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 admin.initializeApp();
 const messaging = admin.messaging();
+const functions = require("firebase-functions");
 
 // Exemplo de função para capturar uma trigger de um documento do Firestore
 exports.onNotificacaoDemoTriggerV2 = onDocumentUpdated(
@@ -47,3 +48,35 @@ exports.onNotificacaoDemoTriggerV2 = onDocumentUpdated(
       return null;
     },
 );
+
+/*
+  Atenção: Esta função só funciona em Produção
+  (por que o agendamento é feito pelo GCP).
+  Segundo a documentação atual do Firebase,
+  Cloud Pub/Sub não funciona no emulador local.
+  Fonte: https://firebase.google.com/docs/emulator-suite?hl=pt-br
+*/
+
+// envia regularmente notificações para engajar na campanha "empresa"
+exports.scheduledEmpresaNotification = functions.pubsub
+    .schedule("every wednesday 18:15")
+    .timeZone("America/Sao_Paulo")
+    .onRun(async (context) => {
+      const payload = {
+        notification: {
+          title: "Campanha empresa",
+          body: "Teste de um schedule no Cloud Function para envio de notificações.",
+        },
+        data: {
+          route: "empresa",
+        },
+      };
+
+      try {
+        const response = await admin.messaging().sendToTopic("empresa", payload);
+        console.log("Notification sent successfully:", response);
+      } catch (error) {
+        console.error("Notification sent failed:", error);
+      }
+      return null;
+    });
