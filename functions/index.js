@@ -68,7 +68,7 @@ exports.scheduledEmpresaNotification = functions.pubsub
           body: "Teste de um schedule no Cloud Function para envio de notificações.",
         },
         data: {
-          route: "empresa",
+          rota: "empresas",
         },
       };
 
